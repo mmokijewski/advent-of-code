@@ -1,0 +1,1 @@
+Repository for storing the code for 2024 [advent of code](https://adventofcode.com/)
