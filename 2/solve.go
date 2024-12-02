@@ -89,7 +89,6 @@ func main() {
 				var newNumbers []int
 				newNumbers = append(newNumbers, numbers...)
 				newNumbers = append(newNumbers[:i], newNumbers[i+1:]...)
-				fmt.Println("all", newNumbers)
 				if checkIfSafe(newNumbers) {
 					safeLinesPart2++
 					break
