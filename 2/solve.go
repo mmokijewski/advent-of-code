@@ -30,47 +30,73 @@ func checkIfAscending(leftNum int, rightNum int) bool {
 	}
 }
 
+func checkIfSafe(numbers []int) bool {
+	arrayType := "undefined"
+	safeLine := false
+	for i := range numbers {
+		if i == len(numbers)-1 {
+			safeLine = true
+			continue
+		}
+		leftNum := numbers[i]
+		rightNum := numbers[i+1]
+
+		if arrayType == "undefined" {
+			if checkIfDescending(leftNum, rightNum) {
+				arrayType = "descending"
+			} else if checkIfAscending(leftNum, rightNum) {
+				arrayType = "ascending"
+			} else {
+				break
+			}
+		}
+
+		if arrayType == "descending" {
+			if !checkIfDescending(leftNum, rightNum) {
+				break
+			}
+		} else if arrayType == "ascending" {
+			if !checkIfAscending(leftNum, rightNum) {
+				break
+			}
+		}
+	}
+	return safeLine
+}
+
 func main() {
 	inputFile, err := os.Open("input")
 	checkError(err)
 
 	safeLines := 0
+	safeLinesPart2 := 0
 
 	scanner := bufio.NewScanner(inputFile)
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Split(line, " ")
-		arrayType := "undefined"
+		var numbers []int
 		for i := range items {
-			if i == len(items)-1 {
-				safeLines++
-				continue
-			}
-			leftNum, err := strconv.Atoi(items[i])
+			num, err := strconv.Atoi(items[i])
 			checkError(err)
-			rightNum, err := strconv.Atoi(items[i+1])
-			checkError(err)
-
-			if arrayType == "undefined" {
-				if checkIfDescending(leftNum, rightNum) {
-					arrayType = "descending"
-				} else if checkIfAscending(leftNum, rightNum) {
-					arrayType = "ascending"
-				} else {
-					break
-				}
-			}
-
-			if arrayType == "descending" {
-				if !checkIfDescending(leftNum, rightNum) {
-					break
-				}
-			} else if arrayType == "ascending" {
-				if !checkIfAscending(leftNum, rightNum) {
+			numbers = append(numbers, num)
+		}
+		if checkIfSafe(numbers) {
+			safeLines++
+			safeLinesPart2++
+		} else {
+			for i := range numbers {
+				var newNumbers []int
+				newNumbers = append(newNumbers, numbers...)
+				newNumbers = append(newNumbers[:i], newNumbers[i+1:]...)
+				fmt.Println("all", newNumbers)
+				if checkIfSafe(newNumbers) {
+					safeLinesPart2++
 					break
 				}
 			}
 		}
 	}
 	fmt.Printf("Safe lines count: %d\n", safeLines)
+	fmt.Printf("Safe lines count part2: %d\n", safeLinesPart2)
 }
