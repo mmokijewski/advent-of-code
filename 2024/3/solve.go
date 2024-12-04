@@ -6,9 +6,11 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 func main() {
+	start := time.Now()
 	inputFile, _ := os.Open("input")
 
 	totalSumPart1 := 0
@@ -47,4 +49,5 @@ func main() {
 	}
 	fmt.Printf("Total sum part1: %d\n", totalSumPart1)
 	fmt.Printf("Total sum part2: %d\n", totalSumPart2)
+	fmt.Printf("Total time elapsed: %dms\n", time.Since(start).Milliseconds())
 }

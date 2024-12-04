@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func checkError(err error) {
@@ -65,6 +66,7 @@ func checkIfSafe(numbers []int) bool {
 }
 
 func main() {
+	start := time.Now()
 	inputFile, err := os.Open("input")
 	checkError(err)
 
@@ -98,4 +100,5 @@ func main() {
 	}
 	fmt.Printf("Safe lines count: %d\n", safeLines)
 	fmt.Printf("Safe lines count part2: %d\n", safeLinesPart2)
+	fmt.Printf("Total time elapsed: %dms\n", time.Since(start).Milliseconds())
 }

@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func checkError(err error) {
@@ -26,6 +27,7 @@ func countOccurrences(slice []int, numToCount int) int {
 }
 
 func main() {
+	start := time.Now()
 	inputFile, err := os.Open("input")
 	checkError(err)
 
@@ -64,4 +66,5 @@ func main() {
 
 	fmt.Printf("Total distance: %d\n", totalDistance)
 	fmt.Printf("Part 2 sum: %d\n", part2sum)
+	fmt.Printf("Total time elapsed: %dms\n", time.Since(start).Milliseconds())
 }
