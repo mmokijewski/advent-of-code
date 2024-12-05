@@ -23,12 +23,10 @@ func checkSingeRule(update string, rule string) bool {
 }
 
 func checkIfCorrect(update string, rules []string) bool {
-	i := 0
-	for i < len(rules) {
-		if !checkSingeRule(update, rules[i]) {
+	for _, rule := range rules {
+		if !checkSingeRule(update, rule) {
 			return false
 		}
-		i++
 	}
 	return true
 }
@@ -54,7 +52,6 @@ func main() {
 	part1Sum := 0
 	part2Sum := 0
 	var rules []string
-	var updates []string
 
 	scanner := bufio.NewScanner(inputFile)
 	for scanner.Scan() {
@@ -64,24 +61,20 @@ func main() {
 		} else if line == "" {
 			continue
 		} else {
-			updates = append(updates, line)
-		}
-	}
-
-	for i := range updates {
-		isCorrect := checkIfCorrect(updates[i], rules)
-		if isCorrect {
-			part1Sum += getMiddleNum(updates[i])
-		} else {
-			for !isCorrect {
-				for j := range rules {
-					if !checkSingeRule(updates[i], rules[j]) {
-						updates[i] = replaceNumbers(updates[i], rules[j])
+			isCorrect := checkIfCorrect(line, rules)
+			if isCorrect {
+				part1Sum += getMiddleNum(line)
+			} else {
+				for !isCorrect {
+					for _, rule := range rules {
+						if !checkSingeRule(line, rule) {
+							line = replaceNumbers(line, rule)
+						}
 					}
+					isCorrect = checkIfCorrect(line, rules)
 				}
-				isCorrect = checkIfCorrect(updates[i], rules)
+				part2Sum += getMiddleNum(line)
 			}
-			part2Sum += getMiddleNum(updates[i])
 		}
 	}
 
