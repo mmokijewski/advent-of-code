@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"slices"
 	"time"
 )
 
@@ -56,18 +55,18 @@ func goFurther(playground [][]string, posY int, posX int, direction int) []int {
 
 func checkIfLoop(playground [][]string, posY int, posX int, direction int) bool {
 
-	var visitedPositionsWithDir []string
+	visitedPositionsWithDir := make(map[[3]int]bool)
 	tempPosY := posY
 	tempPosX := posX
 	tempDir := direction
 
 	for tempDir != -1 {
-		stringPositionWithDir := fmt.Sprintf("%d,%d,%d", tempPosY, tempPosX, tempDir)
-		if slices.Contains(visitedPositionsWithDir, stringPositionWithDir) {
+		positionWithDir := [3]int{tempPosY, tempPosX, tempDir}
+		if visitedPositionsWithDir[positionWithDir] {
 			return true
 		}
 
-		visitedPositionsWithDir = append(visitedPositionsWithDir, stringPositionWithDir)
+		visitedPositionsWithDir[positionWithDir] = true
 		move := goFurther(playground, tempPosY, tempPosX, tempDir)
 
 		tempPosY = move[0]
@@ -87,8 +86,8 @@ func main() {
 	var direction int
 	var posX int
 	var posY int
-	var visitedPositions []string
-	var newHashesProposal []string
+	visitedPositions := make(map[[2]int]bool)
+	newHashesProposal := make(map[[2]int]bool)
 
 	i := 0
 	scanner := bufio.NewScanner(inputFile)
@@ -119,16 +118,16 @@ func main() {
 		i++
 	}
 	for direction != -1 {
-		stringPosition := fmt.Sprintf("%d,%d", posY, posX)
-		if !slices.Contains(visitedPositions, stringPosition) {
-			visitedPositions = append(visitedPositions, stringPosition)
+		stringPosition := [2]int{posY, posX}
+		if !visitedPositions[stringPosition] {
+			visitedPositions[stringPosition] = true
 		}
 
 		if playground[posY][posX] == "." {
 			playground[posY][posX] = "#"
-			tempHashPos := fmt.Sprintf("%d,%d", posY, posX)
-			if !slices.Contains(newHashesProposal, tempHashPos) && checkIfLoop(playground, startPositionY, startPositionX, 1) {
-				newHashesProposal = append(newHashesProposal, tempHashPos)
+			tempHashPos := [2]int{posY, posX}
+			if !newHashesProposal[tempHashPos] && checkIfLoop(playground, startPositionY, startPositionX, 1) {
+				newHashesProposal[tempHashPos] = true
 			}
 			playground[posY][posX] = "."
 		}
