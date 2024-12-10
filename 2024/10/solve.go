@@ -9,6 +9,16 @@ import (
 	"time"
 )
 
+func directions() map[string][2]int {
+	directions := map[string][2]int{
+		"up":    {-1, 0},
+		"down":  {1, 0},
+		"left":  {0, -1},
+		"right": {0, 1},
+	}
+	return directions
+}
+
 func getScore(board [][]int, point [2]int, expectedHeight int) map[[2]int]bool {
 	summits := make(map[[2]int]bool)
 	posY := point[0]
@@ -23,17 +33,10 @@ func getScore(board [][]int, point [2]int, expectedHeight int) map[[2]int]bool {
 	} else if height == 9 {
 		summits[point] = true
 	} else {
-		for summit := range getScore(board, [2]int{posY - 1, posX}, height+1) {
-			summits[summit] = true
-		}
-		for summit := range getScore(board, [2]int{posY + 1, posX}, height+1) {
-			summits[summit] = true
-		}
-		for summit := range getScore(board, [2]int{posY, posX + 1}, height+1) {
-			summits[summit] = true
-		}
-		for summit := range getScore(board, [2]int{posY, posX - 1}, height+1) {
-			summits[summit] = true
+		for _, dir := range directions() {
+			for summit := range getScore(board, [2]int{posY + dir[0], posX + dir[1]}, height+1) {
+				summits[summit] = true
+			}
 		}
 	}
 	return summits
@@ -53,10 +56,9 @@ func getScorePart2(board [][]int, point [2]int, expectedHeight int) int {
 	} else if height == 9 {
 		trails++
 	} else {
-		trails += getScorePart2(board, [2]int{posY - 1, posX}, height+1)
-		trails += getScorePart2(board, [2]int{posY + 1, posX}, height+1)
-		trails += getScorePart2(board, [2]int{posY, posX + 1}, height+1)
-		trails += getScorePart2(board, [2]int{posY, posX - 1}, height+1)
+		for _, dir := range directions() {
+			trails += getScorePart2(board, [2]int{posY + dir[0], posX + dir[1]}, height+1)
+		}
 	}
 	return trails
 }
