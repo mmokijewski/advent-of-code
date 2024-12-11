@@ -3,60 +3,73 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func blink(stones []string) []string {
+func intLen(i int) int {
+	count := 0
+	for i != 0 {
+		i /= 10
+		count++
+	}
+	return count
+}
 
-	var newStones []string
+func splitIntToTwo(input int) (int, int) {
+	splitValue := int(math.Pow10(intLen(input) / 2))
+	right := input % splitValue
+	left := (input - right) / splitValue
 
-	for _, stone := range stones {
-		stoneLength := len(stone)
-		if stone == "0" {
-			newStones = append(newStones, "1")
-		} else if stoneLength%2 == 0 {
-			firstHalf := ""
-			secondHalf := ""
-			for i, char := range stone {
-				if i < stoneLength/2 {
-					firstHalf = fmt.Sprintf("%s%s", firstHalf, string(char))
-				} else {
-					secondHalf = fmt.Sprintf("%s%s", secondHalf, string(char))
-				}
-			}
-			left, _ := strconv.Atoi(firstHalf)
-			right, _ := strconv.Atoi(secondHalf)
-			newStones = append(newStones, strconv.Itoa(left))
-			newStones = append(newStones, strconv.Itoa(right))
+	return left, right
+}
+
+func blink(stones map[int]int, times int) map[int]int {
+	newStones := make(map[int]int)
+
+	if times == 0 {
+		return stones
+	}
+
+	for stone, count := range stones {
+		if stone == 0 {
+			newStones[1] += count
+		} else if intLen(stone)%2 == 0 {
+			left, right := splitIntToTwo(stone)
+			newStones[left] += count
+			newStones[right] += count
 		} else {
-			stoneNum, _ := strconv.Atoi(stone)
-			newStones = append(newStones, strconv.Itoa(stoneNum*2024))
+			newStones[stone*2024] += count
 		}
 	}
-	return newStones
+	return blink(newStones, times-1)
 }
 
 func main() {
 	start := time.Now()
 	inputFile, _ := os.Open("input")
 
-	var stones []string
+	stones := make(map[int]int)
 
 	scanner := bufio.NewScanner(inputFile)
 	for scanner.Scan() {
 		line := scanner.Text()
 		for _, stone := range strings.Split(line, " ") {
-			stones = append(stones, stone)
+			stoneNum, _ := strconv.Atoi(stone)
+			stones[stoneNum]++
 		}
 	}
 
-	for i := 0; i < 25; i++ {
-		stones = blink(stones)
+	sum := 0
+	stones = blink(stones, 75)
+
+	for _, count := range stones {
+		sum += count
 	}
 
-	fmt.Printf("Part 1: %d\n", len(stones))
+	fmt.Printf("Part 2: %d\n", sum)
 	fmt.Printf("Total time elapsed: %dms\n", time.Since(start).Milliseconds())
 }
