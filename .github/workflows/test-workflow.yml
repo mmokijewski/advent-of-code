@@ -7,7 +7,11 @@ jobs:
     runs-on: [ arc-runner-test-arm-spot ]
     name: Test
     steps:
-      - name: Test
+      - name: Show /etc/os-release
+        run: cat /etc/os-release
+      - name: Call uname -p
+        run: uname -p
+      - name: Check docker
         run: |
-          cat /etc/os-release
-          uname -p
+          docker version
+          docker ps
