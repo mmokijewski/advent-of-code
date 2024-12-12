@@ -1,4 +1,5 @@
-name: Test workflow on amd
+name: Test workflow
+run-name: Test workflow on amd
 on:
   workflow_dispatch:
 
