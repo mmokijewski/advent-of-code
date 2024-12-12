@@ -11,6 +11,8 @@ jobs:
         run: cat /etc/os-release
       - name: Call uname -p
         run: uname -p
+      - name: Proc info
+        run: cat /proc/cpuinfo
       - name: Check docker
         run: |
           docker version
