@@ -1,11 +1,11 @@
 name: Test workflow
-run-name: Test workflow on amd
+run-name: Test workflow on arm
 on:
   workflow_dispatch:
 
 jobs:
   test:
-    runs-on: [ arc-runner-test-amd-spot ]
+    runs-on: [ arc-runner-test-arm-spot ]
     name: Test
     steps:
       - name: Show /etc/os-release
