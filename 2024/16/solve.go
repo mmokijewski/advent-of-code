@@ -25,47 +25,20 @@ var directions = []Point{
 	{0, -1}, // left
 }
 
-//func countPathScore(path [][2]int) int {
-//	//fmt.Println(path)
-//	start := path[0]
-//	score := 0
-//	score += len(path) - 1
-//	for i, field := range path {
-//		if i == 0 {
-//			continue
-//		}
-//		if i == 1 {
-//			if field[0] == start[0]-1 {
-//				score += 1000
-//			}
-//			continue
-//		}
-//		if field[0] != path[i-2][0] && field[1] != path[i-2][1] {
-//			score += 1000
-//		}
-//	}
-//	return score
-//}
-
-func getPathWithLowestScore(paths []Path) (Path, []Path) {
-	sort.Slice(paths, func(i, j int) bool {
-		return paths[i].score <= paths[j].score
-	})
-	minPath := paths[0]
-	if len(paths) > 1 {
-		paths = paths[1:]
-	}
-	return minPath, paths
-}
-
 func findCheapestPath(board [][]string, start Point) int {
 	paths := []Path{{start, 1, 0}}
 	visitedFields := make(map[[3]int]bool)
 	var output int
 
 	for {
-		var currentPath Path
-		currentPath, paths = getPathWithLowestScore(paths)
+		sort.Slice(paths, func(i, j int) bool {
+			return paths[i].score <= paths[j].score
+		})
+		currentPath := paths[0]
+		if len(paths) > 1 {
+			paths = paths[1:]
+		}
+
 		posY := currentPath.position.y
 		posX := currentPath.position.x
 		currentPosWithDir := [3]int{posY, posX, currentPath.lastDirection}
