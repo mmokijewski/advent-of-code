@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"time"
 )
@@ -16,6 +17,7 @@ type Path struct {
 	position      Point
 	lastDirection int
 	score         int
+	visitedFields []Point
 }
 
 var directions = []Point{
@@ -25,18 +27,25 @@ var directions = []Point{
 	{0, -1}, // left
 }
 
-func findCheapestPath(board [][]string, start Point) int {
-	paths := []Path{{start, 1, 0}}
-	visitedFields := make(map[[3]int]bool)
-	var output int
+func findCheapestPath(board [][]string, start Point) (int, int) {
+	paths := []Path{{start, 1, 0, []Point{start}}}
+	visitedFields := make(map[[3]int]int)
+	placesToSit := make(map[Point]bool)
+	var lowestScore int
 
-	for {
+	for len(paths) > 0 {
 		sort.Slice(paths, func(i, j int) bool {
 			return paths[i].score <= paths[j].score
 		})
 		currentPath := paths[0]
 		if len(paths) > 1 {
-			paths = paths[1:]
+			paths = append([]Path{}, paths[1:]...)
+		} else {
+			paths = []Path{}
+		}
+
+		if lowestScore != 0 && currentPath.score > lowestScore {
+			continue
 		}
 
 		posY := currentPath.position.y
@@ -44,33 +53,41 @@ func findCheapestPath(board [][]string, start Point) int {
 		currentPosWithDir := [3]int{posY, posX, currentPath.lastDirection}
 
 		if board[posY][posX] == "E" {
-			output = currentPath.score
-			break
-		}
-
-		if visitedFields[currentPosWithDir] {
+			lowestScore = currentPath.score
+			for _, place := range currentPath.visitedFields {
+				placesToSit[place] = true
+			}
 			continue
 		}
-		visitedFields[currentPosWithDir] = true
+
+		if visitedFields[currentPosWithDir] != 0 && currentPath.score > visitedFields[currentPosWithDir] {
+			continue
+		}
+		visitedFields[currentPosWithDir] = currentPath.score
 
 		for dirIndex, dir := range directions {
 			newPos := Point{posY + dir.y, posX + dir.x}
+
+			if slices.Contains(currentPath.visitedFields, newPos) {
+				continue
+			}
 
 			if board[newPos.y][newPos.x] == "#" {
 				continue
 			}
 
-			nextPath := Path{currentPath.position, dirIndex, currentPath.score}
+			newVisitedFields := slices.Clone(currentPath.visitedFields)
+			newVisitedFields = append(newVisitedFields, newPos)
+			nextPath := Path{newPos, dirIndex, currentPath.score, newVisitedFields}
 			if currentPath.lastDirection != dirIndex {
-				nextPath.score += 1000
+				nextPath.score += 1001
 			} else {
-				nextPath.position = newPos
 				nextPath.score += 1
 			}
 			paths = append(paths, nextPath)
 		}
 	}
-	return output
+	return lowestScore, len(placesToSit)
 }
 
 func main() {
@@ -95,8 +112,9 @@ func main() {
 		i++
 	}
 
-	score := findCheapestPath(board, start)
+	score, placesToSit := findCheapestPath(board, start)
 
 	fmt.Printf("Part 1: %d\n", score)
+	fmt.Printf("Part 2: %d\n", placesToSit)
 	fmt.Printf("Total time elapsed: %dms\n", time.Since(timeStart).Milliseconds())
 }
