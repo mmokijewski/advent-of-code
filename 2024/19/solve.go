@@ -14,6 +14,7 @@ func main() {
 
 	towels := make(map[string]bool)
 	result := 0
+	resultPart2 := 0
 
 	scanner := bufio.NewScanner(inputFile)
 	towelsLine := true
@@ -39,9 +40,22 @@ func main() {
 			if matches[len(line)] {
 				result++
 			}
+
+			matchesPart2 := make([]int, len(line)+1)
+			matchesPart2[0] = 1
+
+			for i := 1; i <= len(line); i++ {
+				for j := 0; j < i; j++ {
+					if matchesPart2[j] > 0 && towels[line[j:i]] {
+						matchesPart2[i] += matchesPart2[j]
+					}
+				}
+			}
+			resultPart2 += matchesPart2[len(line)]
 		}
 	}
 
 	fmt.Printf("Part 1: %d\n", result)
+	fmt.Printf("Part 2: %d\n", resultPart2)
 	fmt.Printf("Total time elapsed: %dms\n", time.Since(timeStart).Milliseconds())
 }
