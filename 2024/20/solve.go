@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"slices"
 	"sort"
@@ -31,6 +32,7 @@ var directions = []Point{
 
 func findCheapestPath(board [][]string, start Point) (int, map[Point]int) {
 	initialPlacesWithScore := make(map[Point]int)
+	initialPlacesWithScore[start] = 0
 	paths := []Path{{start, 1, 0, 0, []Point{start}, initialPlacesWithScore}}
 	visitedFields := make(map[[3]int]int)
 	var lowestScore int
@@ -95,7 +97,6 @@ func findCheapestPath(board [][]string, start Point) (int, map[Point]int) {
 
 func findCheatedPaths(board [][]string, start Point, minDiff int) int {
 	lowestScore, placesWithScore := findCheapestPath(board, start)
-	fmt.Println("Lowest: ", lowestScore)
 	initialPlacesWithScore := make(map[Point]int)
 	paths := []Path{{start, 1, 0, 0, []Point{start}, initialPlacesWithScore}}
 	result := 0
@@ -151,6 +152,36 @@ func findCheatedPaths(board [][]string, start Point, minDiff int) int {
 	return result
 }
 
+func findCheatedPathsPart2(board [][]string, start Point) int {
+	lowestScore, placesWithScore := findCheapestPath(board, start)
+	result := 0
+
+	cheatTime := 20
+	expectedMinCheatSaving := 100
+
+	for field := range placesWithScore {
+		for y := -cheatTime; y <= cheatTime; y++ {
+			maxX := int(float64(cheatTime) - math.Abs(float64(y)))
+			for x := -maxX; x <= maxX; x++ {
+				newPos := Point{field.y + y, field.x + x}
+
+				if newPos.y < 0 || newPos.y >= len(board) || newPos.x < 0 || newPos.x >= len(board[0]) || board[newPos.y][newPos.x] == "#" {
+					continue
+				}
+
+				lengthTillEndOfCheat := placesWithScore[field] + int(math.Abs(float64(y))) + int(math.Abs(float64(x)))
+				skippedFields := placesWithScore[newPos] - lengthTillEndOfCheat
+				cheatedPathScore := lowestScore - skippedFields
+
+				if cheatedPathScore < len(placesWithScore)-expectedMinCheatSaving {
+					result++
+				}
+			}
+		}
+	}
+	return result
+}
+
 func main() {
 	timeStart := time.Now()
 	inputFile, _ := os.Open("input")
@@ -173,7 +204,9 @@ func main() {
 		i++
 	}
 
-	score := findCheatedPaths(board, start, 100)
+	score := findCheatedPaths(board, start, 2)
+	scorePart2 := findCheatedPathsPart2(board, start)
 	fmt.Printf("Part 1: %d\n", score)
+	fmt.Printf("Part 2: %d\n", scorePart2)
 	fmt.Printf("Total time elapsed: %dms\n", time.Since(timeStart).Milliseconds())
 }
