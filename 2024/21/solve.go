@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"slices"
-	"sort"
 	"strconv"
 	"time"
 )
@@ -14,90 +12,58 @@ type Point struct {
 	y, x int
 }
 
-type PointWithDir struct {
-	pos Point
-	dir Point
-}
-
 type Path struct {
-	position      Point
-	visitedFields []Point
-	moves         map[Point]int
-	lastMove      Point
+	position Point
+	moves    map[Point]int
 }
 
-var directions = map[string]Point{
-	"<": {0, -1},
-	"v": {1, 0},
-	"^": {-1, 0},
-	">": {0, 1},
+var directions = []Point{
+	{0, -1},
+	{1, 0},
+	{-1, 0},
+	{0, 1},
 }
 
 func findCheapestPathOnKeypad(keypad [][]string, start string, end string) string {
 	var startPos Point
+	var endPos Point
 	for i, line := range keypad {
 		for j, key := range line {
 			if key == start {
 				startPos = Point{i, j}
+			} else if key == end {
+				endPos = Point{i, j}
 			}
 		}
 	}
-	visitedFields := make(map[PointWithDir]bool)
-	var lowestScore int
-
 	moves := make(map[Point]int)
-	paths := []Path{{startPos, []Point{}, moves, Point{-1, -1}}}
 
-	for {
-		sort.Slice(paths, func(i, j int) bool {
-			return len(paths[i].visitedFields) <= len(paths[j].visitedFields)
-		})
-		currentPath := paths[0]
-		//fmt.Println(start, startPos, end, currentPath)
-		if len(paths) > 1 {
-			paths = append([]Path{}, paths[1:]...)
-		}
-		if lowestScore != 0 && len(currentPath.visitedFields) > lowestScore {
-			continue
-		}
-
-		posY := currentPath.position.y
-		posX := currentPath.position.x
-		currentPosWithDir := PointWithDir{currentPath.position, currentPath.lastMove}
-
-		if keypad[posY][posX] == end {
-			lowestScore = len(currentPath.visitedFields)
-			for key, value := range currentPath.moves {
-				moves[key] = value
+	newPos := startPos
+	for keypad[newPos.y][newPos.x] != end {
+		for dirIndex, dir := range directions {
+			tempPos := Point{newPos.y + dir.y, newPos.x + dir.x}
+			if tempPos.y < 0 || tempPos.y >= len(keypad) || tempPos.x < 0 || tempPos.x >= len(keypad[0]) {
+				continue
 			}
+
+			if keypad[tempPos.y][tempPos.x] == "X" {
+				continue
+			}
+			if newPos.x == endPos.x && (dirIndex == 0 || dirIndex == 3) {
+				continue
+			}
+			if newPos.y == endPos.y && (dirIndex == 1 || dirIndex == 2) {
+				continue
+			}
+			if newPos.x < endPos.x && dirIndex == 0 {
+				continue
+			}
+			if newPos.y > endPos.y && dirIndex == 1 {
+				continue
+			}
+			moves[dir]++
+			newPos = tempPos
 			break
-		}
-
-		if visitedFields[currentPosWithDir] {
-			continue
-		}
-		visitedFields[currentPosWithDir] = true
-
-		for _, dir := range directions {
-			newPos := Point{posY + dir.y, posX + dir.x}
-
-			if newPos.y < 0 || newPos.y >= len(keypad) || newPos.x < 0 || newPos.x >= len(keypad[0]) || keypad[newPos.y][newPos.x] == "X" {
-				continue
-			}
-
-			if slices.Contains(currentPath.visitedFields, newPos) {
-				continue
-			}
-
-			newVisitedFields := slices.Clone(currentPath.visitedFields)
-			newVisitedFields = append(newVisitedFields, newPos)
-			newMoves := make(map[Point]int)
-			for key, value := range currentPath.moves {
-				newMoves[key] = value
-			}
-			newMoves[dir]++
-			nextPath := Path{newPos, newVisitedFields, newMoves, dir}
-			paths = append(paths, nextPath)
 		}
 	}
 
@@ -111,10 +77,18 @@ func findCheapestPathOnKeypad(keypad [][]string, start string, end string) strin
 				if keypad[tempNextPos.y][tempNextPos.x] != "X" {
 					moves[directions[dirKey]] = 0
 					for range movesAmount {
-						result += dirKey
+						switch dirKey {
+						case 0:
+							result += "<"
+						case 1:
+							result += "v"
+						case 2:
+							result += "^"
+						case 3:
+							result += ">"
+						}
 					}
 					nextPos = tempNextPos
-					continue
 				}
 			}
 		}
@@ -145,8 +119,6 @@ func countCodeResult(code string) int {
 		firstRobotMoves = firstRobotMoves + findCheapestPathOnKeypad(numericKeypad, string(sign), string(code[i+1]))
 	}
 
-	fmt.Println(firstRobotMoves)
-
 	secondRobotMoves := ""
 	firstRobotMoves = "A" + firstRobotMoves
 	for i, sign := range firstRobotMoves {
@@ -155,7 +127,6 @@ func countCodeResult(code string) int {
 		}
 		secondRobotMoves = secondRobotMoves + findCheapestPathOnKeypad(dirKeypad, string(sign), string(firstRobotMoves[i+1]))
 	}
-	fmt.Println(secondRobotMoves)
 
 	thirdRobotMoves := ""
 	secondRobotMoves = "A" + secondRobotMoves
