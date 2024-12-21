@@ -12,16 +12,16 @@ type Point struct {
 	y, x int
 }
 
-type Path struct {
-	position Point
-	moves    map[Point]int
+type Direction struct {
+	y, x   int
+	symbol string
 }
 
-var directions = []Point{
-	{0, -1},
-	{1, 0},
-	{-1, 0},
-	{0, 1},
+var directions = []Direction{
+	{0, -1, "<"},
+	{1, 0, "v"},
+	{-1, 0, "^"},
+	{0, 1, ">"},
 }
 
 func findCheapestPathOnKeypad(keypad [][]string, start string, end string) string {
@@ -36,11 +36,11 @@ func findCheapestPathOnKeypad(keypad [][]string, start string, end string) strin
 			}
 		}
 	}
-	moves := make(map[Point]int)
+	moves := make(map[string]int)
 
 	newPos := startPos
 	for keypad[newPos.y][newPos.x] != end {
-		for dirIndex, dir := range directions {
+		for _, dir := range directions {
 			tempPos := Point{newPos.y + dir.y, newPos.x + dir.x}
 			if tempPos.y < 0 || tempPos.y >= len(keypad) || tempPos.x < 0 || tempPos.x >= len(keypad[0]) {
 				continue
@@ -49,19 +49,19 @@ func findCheapestPathOnKeypad(keypad [][]string, start string, end string) strin
 			if keypad[tempPos.y][tempPos.x] == "X" {
 				continue
 			}
-			if newPos.x == endPos.x && (dirIndex == 0 || dirIndex == 3) {
+			if newPos.x == endPos.x && (dir.symbol == "<" || dir.symbol == ">") {
 				continue
 			}
-			if newPos.y == endPos.y && (dirIndex == 1 || dirIndex == 2) {
+			if newPos.y == endPos.y && (dir.symbol == "v" || dir.symbol == "^") {
 				continue
 			}
-			if newPos.x < endPos.x && dirIndex == 0 {
+			if newPos.x < endPos.x && dir.symbol == "<" {
 				continue
 			}
-			if newPos.y > endPos.y && dirIndex == 1 {
+			if newPos.y > endPos.y && dir.symbol == "v" {
 				continue
 			}
-			moves[dir]++
+			moves[dir.symbol]++
 			newPos = tempPos
 			break
 		}
@@ -70,23 +70,14 @@ func findCheapestPathOnKeypad(keypad [][]string, start string, end string) strin
 	result := ""
 	nextPos := startPos
 	for keypad[nextPos.y][nextPos.x] != end {
-		for dirKey, dir := range directions {
-			if moves[directions[dirKey]] > 0 {
-				movesAmount := moves[directions[dirKey]]
+		for _, dir := range directions {
+			if moves[dir.symbol] > 0 {
+				movesAmount := moves[dir.symbol]
 				tempNextPos := Point{nextPos.y + movesAmount*dir.y, nextPos.x + movesAmount*dir.x}
 				if keypad[tempNextPos.y][tempNextPos.x] != "X" {
-					moves[directions[dirKey]] = 0
+					moves[dir.symbol] = 0
 					for range movesAmount {
-						switch dirKey {
-						case 0:
-							result += "<"
-						case 1:
-							result += "v"
-						case 2:
-							result += "^"
-						case 3:
-							result += ">"
-						}
+						result += dir.symbol
 					}
 					nextPos = tempNextPos
 				}
@@ -96,7 +87,7 @@ func findCheapestPathOnKeypad(keypad [][]string, start string, end string) strin
 	return result + "A"
 }
 
-func countCodeResult(code string) int {
+func countCodeResult(code string, robotsCount int) int {
 	numericKeypad := make([][]string, 4)
 	numericKeypad[0] = append(numericKeypad[0], "7", "8", "9")
 	numericKeypad[1] = append(numericKeypad[1], "4", "5", "6")
@@ -107,41 +98,48 @@ func countCodeResult(code string) int {
 	dirKeypad[0] = append(dirKeypad[0], "X", "^", "A")
 	dirKeypad[1] = append(dirKeypad[1], "<", "v", ">")
 
-	firstRobotMoves := ""
-
 	codeNumPart, _ := strconv.Atoi(code[:len(code)-1])
 
-	code = "A" + code
-	for i, sign := range code {
-		if i == len(code)-1 {
-			break
+	lastRobotMoves := make(map[string]int)
+	lastRobotMoves[code]++
+
+	for r := range robotsCount + 1 {
+		thisRobotMoves := make(map[string]int)
+
+		for move, count := range lastRobotMoves {
+			move = "A" + move
+			for i, sign := range move {
+				if i == len(move)-1 {
+					break
+				}
+				if r == 0 {
+					newMove := findCheapestPathOnKeypad(numericKeypad, string(sign), string(move[i+1]))
+					thisRobotMoves[newMove] += count
+				} else {
+					newMove := findCheapestPathOnKeypad(dirKeypad, string(sign), string(move[i+1]))
+					thisRobotMoves[newMove] += count
+				}
+			}
 		}
-		firstRobotMoves = firstRobotMoves + findCheapestPathOnKeypad(numericKeypad, string(sign), string(code[i+1]))
+		lastRobotMoves = make(map[string]int)
+		for key, value := range thisRobotMoves {
+			lastRobotMoves[key] = value
+		}
 	}
 
-	secondRobotMoves := ""
-	firstRobotMoves = "A" + firstRobotMoves
-	for i, sign := range firstRobotMoves {
-		if i == len(firstRobotMoves)-1 {
-			break
-		}
-		secondRobotMoves = secondRobotMoves + findCheapestPathOnKeypad(dirKeypad, string(sign), string(firstRobotMoves[i+1]))
+	result := 0
+
+	for move, moveCount := range lastRobotMoves {
+		result += len(move) * moveCount * codeNumPart
 	}
 
-	thirdRobotMoves := ""
-	secondRobotMoves = "A" + secondRobotMoves
-	for i, sign := range secondRobotMoves {
-		if i == len(secondRobotMoves)-1 {
-			break
-		}
-		thirdRobotMoves = thirdRobotMoves + findCheapestPathOnKeypad(dirKeypad, string(sign), string(secondRobotMoves[i+1]))
-	}
-	return len(thirdRobotMoves) * codeNumPart
+	return result
 }
 
 func main() {
 	timeStart := time.Now()
 	part1Result := 0
+	part2Result := 0
 	var codes []string
 
 	inputFile, _ := os.Open("input")
@@ -152,9 +150,11 @@ func main() {
 	}
 
 	for _, code := range codes {
-		part1Result += countCodeResult(code)
+		part1Result += countCodeResult(code, 2)
+		part2Result += countCodeResult(code, 25)
 	}
 
 	fmt.Printf("Part 1 result: %d \n", part1Result)
+	fmt.Printf("Part 2 result: %d \n", part2Result)
 	fmt.Printf("Total time elapsed: %dms\n", time.Since(timeStart).Milliseconds())
 }
