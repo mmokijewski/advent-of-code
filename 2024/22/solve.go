@@ -4,36 +4,90 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"time"
 )
+
+type Sequence struct {
+	current    int
+	last       int
+	secondLast int
+	thirdLast  int
+}
+
+type SequenceValue struct {
+	priceIndexes []int
+	bananas      int
+}
+
+type Price struct {
+	current        int
+	priceSequence  Sequence
+	changeSequence Sequence
+}
 
 func main() {
 	timeStart := time.Now()
 	inputFile, _ := os.Open("input")
 
-	var prices []int
+	var prices []Price
 	scanner := bufio.NewScanner(inputFile)
+	i := 0
 	for scanner.Scan() {
 		line := scanner.Text()
 		price, _ := strconv.Atoi(line)
-		prices = append(prices, price)
+		initialSequence := Sequence{10, 10, 10, 10}
+		prices = append(prices, Price{price, initialSequence, initialSequence})
+		i++
 	}
+
+	sequences := make(map[Sequence]SequenceValue)
 
 	for range 2000 {
 		for i, price := range prices {
-			price = ((price * 64) ^ price) % 16777216
-			price = ((price / 32) ^ price) % 16777216
-			price = ((price * 2048) ^ price) % 16777216
-			prices[i] = price
+			newPrice := price.current
+			newPrice = ((newPrice * 64) ^ newPrice) % 16777216
+			newPrice = ((newPrice / 32) ^ newPrice) % 16777216
+			newPrice = ((newPrice * 2048) ^ newPrice) % 16777216
+			modifiedPrice := newPrice % 10
+			change := modifiedPrice - (price.current % 10)
+
+			prices[i].current = newPrice
+
+			prices[i].priceSequence.thirdLast = prices[i].priceSequence.secondLast
+			prices[i].priceSequence.secondLast = prices[i].priceSequence.last
+			prices[i].priceSequence.last = prices[i].priceSequence.current
+			prices[i].priceSequence.current = modifiedPrice
+
+			prices[i].changeSequence.thirdLast = prices[i].changeSequence.secondLast
+			prices[i].changeSequence.secondLast = prices[i].changeSequence.last
+			prices[i].changeSequence.last = prices[i].changeSequence.current
+			prices[i].changeSequence.current = change
+
+			if !slices.Contains(sequences[prices[i].changeSequence].priceIndexes, i) && prices[i].changeSequence.thirdLast != 10 {
+				var newIndexes []int
+				newIndexes = append(newIndexes, sequences[prices[i].changeSequence].priceIndexes...)
+				newIndexes = append(newIndexes, i)
+				newBananas := sequences[prices[i].changeSequence].bananas + modifiedPrice
+				sequences[prices[i].changeSequence] = SequenceValue{newIndexes, newBananas}
+			}
 		}
 	}
 
 	part1Sum := 0
 	for _, price := range prices {
-		part1Sum += price
+		part1Sum += price.current
+	}
+
+	part2Sum := 0
+	for _, sequence := range sequences {
+		if sequence.bananas > part2Sum {
+			part2Sum = sequence.bananas
+		}
 	}
 
 	fmt.Printf("Part 1: %d\n", part1Sum)
+	fmt.Printf("Part 2: %d\n", part2Sum)
 	fmt.Printf("Total time elapsed: %dms\n", time.Since(timeStart).Milliseconds())
 }
