@@ -16,6 +16,7 @@ func main() {
 	var groups [][]string
 	var allComputers []string
 	compConnections := make(map[string][]string)
+	var lanParties [][]string
 	scanner := bufio.NewScanner(inputFile)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -61,6 +62,46 @@ func main() {
 		}
 	}
 
+	for k, v := range compConnections {
+		newParty := true
+		for i, party := range lanParties {
+			appendToParty := true
+			for _, partyComp := range party {
+				if partyComp == k {
+					continue
+				}
+				if !slices.Contains(v, partyComp) {
+					appendToParty = false
+					break
+				}
+			}
+			if appendToParty {
+				lanParties[i] = append(lanParties[i], k)
+				slices.Sort(lanParties[i])
+				newParty = false
+			}
+		}
+		if newParty {
+			lanParties = append(lanParties, []string{k})
+		}
+	}
+
+	var biggestParty []string
+	for _, party := range lanParties {
+		if len(party) > len(biggestParty) {
+			biggestParty = party
+		}
+	}
+
+	var part2Result string
+	for i, comp := range biggestParty {
+		part2Result += comp
+		if i != len(biggestParty)-1 {
+			part2Result += ","
+		}
+	}
+
 	fmt.Printf("Part 1: %d\n", part1Sum)
+	fmt.Printf("Part 2: %s\n", part2Result)
 	fmt.Printf("Total time elapsed: %dms\n", time.Since(timeStart).Milliseconds())
 }
