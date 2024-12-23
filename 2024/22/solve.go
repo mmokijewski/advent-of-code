@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type Sequence struct {
+type ChangeSequence struct {
 	current    int
 	last       int
 	secondLast int
@@ -23,8 +23,7 @@ type SequenceValue struct {
 
 type Price struct {
 	current        int
-	priceSequence  Sequence
-	changeSequence Sequence
+	changeSequence ChangeSequence
 }
 
 func main() {
@@ -37,12 +36,12 @@ func main() {
 	for scanner.Scan() {
 		line := scanner.Text()
 		price, _ := strconv.Atoi(line)
-		initialSequence := Sequence{10, 10, 10, 10}
-		prices = append(prices, Price{price, initialSequence, initialSequence})
+		initialSequence := ChangeSequence{10, 10, 10, 10}
+		prices = append(prices, Price{price, initialSequence})
 		i++
 	}
 
-	sequences := make(map[Sequence]SequenceValue)
+	sequences := make(map[ChangeSequence]SequenceValue)
 
 	for range 2000 {
 		for i, price := range prices {
@@ -54,11 +53,6 @@ func main() {
 			change := modifiedPrice - (price.current % 10)
 
 			prices[i].current = newPrice
-
-			prices[i].priceSequence.thirdLast = prices[i].priceSequence.secondLast
-			prices[i].priceSequence.secondLast = prices[i].priceSequence.last
-			prices[i].priceSequence.last = prices[i].priceSequence.current
-			prices[i].priceSequence.current = modifiedPrice
 
 			prices[i].changeSequence.thirdLast = prices[i].changeSequence.secondLast
 			prices[i].changeSequence.secondLast = prices[i].changeSequence.last
