@@ -5,7 +5,7 @@ on:
 
 jobs:
   test:
-    runs-on: [ arc-runner-arm-spot-lightweight ]
+    runs-on: [ arc-runner-arm-lightweight ]
     name: Test
     steps:
       - name: Show /etc/os-release
