@@ -14,36 +14,47 @@ func checkError(err error) {
 	}
 }
 
+func findNextBiggest(bank string, index int, maxIndex int) (string, int) {
+	maxNum := 0
+	maxNumIndex := 0
+	for i := index; i <= maxIndex; i++ {
+		num := int(bank[i] - '0')
+		if num > maxNum {
+			maxNum = num
+			maxNumIndex = i
+		}
+	}
+	maxNumString := strconv.Itoa(maxNum)
+	return maxNumString, maxNumIndex
+}
+
 func main() {
 	start := time.Now()
 	inputFile, err := os.Open("input")
 	checkError(err)
 
-	part1sum := 0
-	part2sum := 0
+	maxLength := 12
 
+	totalSum := 0
 	scanner := bufio.NewScanner(inputFile)
 	for scanner.Scan() {
 		bank := scanner.Text()
-		firstMaxNum := 0
-		secondMaxNum := 0
-		firstMaxNumIndex := 0
-		for index, numString := range bank {
-			num := int(numString - '0')
-			if num > firstMaxNum && index < len(bank)-1 {
-				firstMaxNum = num
-				firstMaxNumIndex = index
-				secondMaxNum = 0
-			}
-			if num > secondMaxNum && index > firstMaxNumIndex {
-				secondMaxNum = num
-			}
+		maxNumString := ""
+		previousIndex := 0
+
+		firstMaxNum, previousIndex := findNextBiggest(bank, 0, len(bank)-maxLength)
+		maxNumString = maxNumString + firstMaxNum
+
+		for i := maxLength - 1; i > 0; i-- {
+			maxNum, index := findNextBiggest(bank, previousIndex+1, len(bank)-i)
+			previousIndex = index
+			maxNumString = maxNumString + maxNum
 		}
-		maxNum, _ := strconv.Atoi(fmt.Sprintf("%d%d", firstMaxNum, secondMaxNum))
-		part1sum += maxNum
+		maxNum, _ := strconv.Atoi(maxNumString)
+
+		totalSum += maxNum
 	}
 
-	fmt.Printf("Part 1 sum: %d\n", part1sum)
-	fmt.Printf("Part 2 sum: %d\n", part2sum)
+	fmt.Printf("Total sum for max length '%d': %d\n", maxLength, totalSum)
 	fmt.Printf("Total time elapsed: %dms\n", time.Since(start).Milliseconds())
 }
