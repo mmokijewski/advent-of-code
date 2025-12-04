@@ -29,28 +29,11 @@ var directions = []Point{
 	{1, 1},   // down-right
 }
 
-func main() {
-	start := time.Now()
-	inputFile, err := os.Open("input")
-	checkError(err)
-
-	var board [][]string
-
-	part1 := 0
-	scanner := bufio.NewScanner(inputFile)
-	y := 0
-	for scanner.Scan() {
-		line := scanner.Text()
-		var currentLineArray []string
-		for _, sign := range strings.Split(line, "") {
-			currentLineArray = append(currentLineArray, sign)
-		}
-		board = append(board, currentLineArray)
-		y++
-	}
+func checkBoard(board [][]string) ([][]string, int) {
+	rollsToDelete := 0
+	var pointsToClean []Point
 	maxY := len(board) - 1
 	maxX := len(board[0]) - 1
-
 	for y := range board {
 		for x, sign := range board[y] {
 			if sign == "." {
@@ -70,11 +53,47 @@ func main() {
 				}
 			}
 			if dirCount < 4 {
-				part1++
+				rollsToDelete++
+				pointsToClean = append(pointsToClean, Point{y, x})
 			}
 		}
 	}
+	for _, point := range pointsToClean {
+		board[point.y][point.x] = "."
+	}
+	return board, rollsToDelete
+}
+
+func main() {
+	start := time.Now()
+	inputFile, err := os.Open("input")
+	checkError(err)
+
+	var board [][]string
+
+	scanner := bufio.NewScanner(inputFile)
+	y := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		var currentLineArray []string
+		for _, sign := range strings.Split(line, "") {
+			currentLineArray = append(currentLineArray, sign)
+		}
+		board = append(board, currentLineArray)
+		y++
+	}
+
+	part1 := 0
+	board, part1 = checkBoard(board)
+	part2 := part1
+
+	cleanedPoints := part1
+	for cleanedPoints > 0 {
+		board, cleanedPoints = checkBoard(board)
+		part2 += cleanedPoints
+	}
 
 	fmt.Printf("Part1 : %d\n", part1)
+	fmt.Printf("Part2 : %d\n", part2)
 	fmt.Printf("Total time elapsed: %dms\n", time.Since(start).Milliseconds())
 }
