@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -51,6 +52,31 @@ func main() {
 		}
 	}
 
+	part2sum := 0
+	sort.Slice(freshIdRanges, func(i, j int) bool {
+		return freshIdRanges[i].start < freshIdRanges[j].start
+	})
+	var currentEnd int
+	for i, singleIdRange := range freshIdRanges {
+		if i == 0 {
+			part2sum += singleIdRange.end - singleIdRange.start + 1
+			currentEnd = singleIdRange.end
+		} else {
+			if singleIdRange.start <= currentEnd {
+				if singleIdRange.end <= currentEnd {
+					continue
+				} else {
+					part2sum += singleIdRange.end - currentEnd
+					currentEnd = singleIdRange.end
+				}
+			} else {
+				part2sum += singleIdRange.end - singleIdRange.start + 1
+				currentEnd = singleIdRange.end
+			}
+		}
+	}
+
 	fmt.Printf("Part1 : %d\n", part1sum)
+	fmt.Printf("Part2 : %d\n", part2sum)
 	fmt.Printf("Total time elapsed: %dms\n", time.Since(start).Milliseconds())
 }
