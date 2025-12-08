@@ -23,7 +23,8 @@ type junctionBox struct {
 }
 
 type connection struct {
-	boxIndex1, boxIndex2, distance int
+	boxIndex1, boxIndex2 int
+	distance             float64
 }
 
 func main() {
@@ -33,6 +34,8 @@ func main() {
 
 	pairsToConnect := 1000
 
+	var part1 int
+	var part2 int
 	var junctionBoxes []junctionBox
 	var allConnections []connection
 	var groups [][]int
@@ -52,7 +55,7 @@ func main() {
 	for i, box := range junctionBoxes {
 		for j := i - 1; j >= 0; j-- {
 			boxToMeasure := junctionBoxes[j]
-			distance := int(math.Sqrt(math.Pow(float64(box.x-boxToMeasure.x), 2) + math.Pow(float64(box.y-boxToMeasure.y), 2) + math.Pow(float64(box.z-boxToMeasure.z), 2)))
+			distance := math.Sqrt(math.Pow(float64(box.x-boxToMeasure.x), 2) + math.Pow(float64(box.y-boxToMeasure.y), 2) + math.Pow(float64(box.z-boxToMeasure.z), 2))
 			allConnections = append(allConnections, connection{j, i, distance})
 		}
 	}
@@ -63,9 +66,6 @@ func main() {
 	})
 
 	for _, pair := range allConnections {
-		if pairsToConnect == 0 {
-			break
-		}
 		// Check if some of the box already exists in some group
 		boxExistsInGroup := false
 		for groupIndex, group := range groups {
@@ -113,14 +113,25 @@ func main() {
 			groups = append(groups, []int{pair.boxIndex1, pair.boxIndex2})
 		}
 		pairsToConnect--
+
+		// Sort groups by length
+		sort.Slice(groups, func(i int, j int) bool {
+			return len(groups[i]) > len(groups[j])
+		})
+
+		// Catch condition for part 1
+		if pairsToConnect == 0 {
+			part1 = len(groups[0]) * len(groups[1]) * len(groups[2])
+		}
+
+		// Connect until there is one group containing all boxes
+		if len(groups[0]) == len(junctionBoxes) {
+			part2 = junctionBoxes[pair.boxIndex1].x * junctionBoxes[pair.boxIndex2].x
+			break
+		}
 	}
 
-	sort.Slice(groups, func(i int, j int) bool {
-		return len(groups[i]) > len(groups[j])
-	})
-
-	part1sum := len(groups[0]) * len(groups[1]) * len(groups[2])
-
-	fmt.Printf("Part1 : %d\n", part1sum)
+	fmt.Printf("Part1 : %d\n", part1)
+	fmt.Printf("Part2 : %d\n", part2)
 	fmt.Printf("Total time elapsed: %dms\n", time.Since(start).Milliseconds())
 }
